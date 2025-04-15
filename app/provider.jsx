@@ -2,6 +2,8 @@
 import { UserContext } from '@/context/UserContext';
 import { supabase } from '@/services/superbaseClient';
 import React, { useEffect, useState } from 'react';
+import { useContext } from 'react';
+
 
 const Provider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -33,20 +35,16 @@ const Provider = ({ children }) => {
             email: user?.email,
             profilepic: user?.user_metadata?.picture || ""
           })
-          .select(); // Get inserted row
+          .select();
 
         if (insertError) {
           console.error("Error inserting user:", insertError.message);
         } else {
-          console.log("New user inserted:", insertData);
           setCurrentUser(insertData?.[0]);
         }
       } else {
-        console.log("User already exists:", Users);
         setCurrentUser(Users[0]);
       }
-    } else {
-      console.log("No user logged in.");
     }
   };
 
@@ -56,15 +54,17 @@ const Provider = ({ children }) => {
 
   return (
     <UserContext.Provider value={{ currentUser, setCurrentUser }}>
-      <div>{children}</div>
+      {children}
     </UserContext.Provider>
   );
 };
 
 export default Provider;
 
-
-export const useUser=()=>{
-    const context = UserContext(UserContext)
-    return context
-}
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error("useUser must be used inside Provider");
+  }
+  return context;
+};
